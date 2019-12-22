@@ -9,7 +9,7 @@ import random as rnd
 import matplotlib.pyplot as plt
 
 
-def fit(X_raw, Y, coeffs_count=8, population_size=20, random_injection_each_round=10, best_select_amount=5, mutation_coeff=0.05, iterations_max=50):
+def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_round=2, best_select_amount=4, mutation_coeff=0.05, iterations_max=250):
   # plt.subplot(221)
   # plt.imshow(X_comp[0], cmap=plt.get_cmap('gray'))
 
@@ -121,7 +121,7 @@ def fit(X_raw, Y, coeffs_count=8, population_size=20, random_injection_each_roun
     incorrect_answers = reduce(
         lambda acc, error: acc + (1 if error > 0 else 0), errors, 0)
 
-    print("population_size: {}, error_min: {:2.2f}, delta: {:2.4f}".format(len(population),
+    print("population_size: {}, error_min: {:2.4f}, delta: {:2.6f}".format(len(population),
                                                                            error_min, 0 if error_min_previous == None else error_min_previous - error_min))
 
     population_sorted = [population[t[0]] for t in errors_enum]
