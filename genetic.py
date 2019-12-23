@@ -136,20 +136,18 @@ def fit(X_raw, Y, coeffs_count=6, population_size_initial=100, random_injection_
     chro_best = population_sorted[:best_select_amount]
     chro_best_mutated = list(map(mutate, chro_best))
 
-    new_randoms = [randomChromosome()
-                   for i in range(random_injection_each_round)]
+    shuffle(chro_best)
 
-    # shuffle(chro_best)
+    pairs_to_crossover = zip(chro_best[::2], chro_best[1::2])
+    crossovered_pairs = list(
+        map(lambda pair: crossover(pair[0], pair[1]), pairs_to_crossover))
+    crossovered_chromosomes = [
+        chro for pair in crossovered_pairs for chro in pair]
 
-    # pairs_to_crossover = zip(chro_best[::2], chro_best[1::2])
-    # crossovered_pairs = list(
-    #     map(lambda pair: crossover(pair[0], pair[1]), pairs_to_crossover))
-    # crossovered_chromosomes = [
-    #     chro for pair in crossovered_pairs for chro in pair]
+    population_new = crossovered_chromosomes + \
+        chro_best + chro_best_mutated
 
-    # population_new = crossovered_chromosomes + \
-    #     chro_best + chro_best_mutated + new_randoms
-    population_new = chro_best + chro_best_mutated + new_randoms
+    # population_new = chro_best + chro_best_mutated
 
     return fitForNumber(X, number, population_new, iters_left - 1, error_min)
 
@@ -173,7 +171,7 @@ def fit(X_raw, Y, coeffs_count=6, population_size_initial=100, random_injection_
   X = compressAllImages(X_raw)
   chromosomes = [fitForNumber(X, i) for i in range(10)]
 
-  def decider(img):
+  def decide(img):
     img_comp = compressImage(img)
     weights = [processNumber(number, chro, img_comp)
                for number, chro in enumerate(chromosomes)]
@@ -184,4 +182,4 @@ def fit(X_raw, Y, coeffs_count=6, population_size_initial=100, random_injection_
   print("Fitting done with mutation_rate={} and mutation_coeff={}".format(
       mutation_rate, mutation_coeff))
 
-  return decider
+  return decide
