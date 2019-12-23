@@ -1,8 +1,13 @@
 from keras.datasets import mnist
 import matplotlib.pyplot as plt
 from math import *
-
+import argparse
 from genetic import fit
+
+parser = argparse.ArgumentParser()
+parser.add_argument("m_rate")
+parser.add_argument("m_coeff")
+args = parser.parse_args()
 
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
@@ -12,7 +17,8 @@ x_train_pack = X_train[:amount]
 y_train_pack = y_train[:amount]
 
 print("Fitting on {} images...".format(len(x_train_pack)))
-decider = fit(x_train_pack, y_train_pack)
+decider = fit(x_train_pack, y_train_pack,
+              mutation_rate=float(args.m_rate), mutation_coeff=float(args.m_coeff))
 
 print_step = floor(len(X_test) / 100)
 correct_hits = 0

@@ -9,7 +9,9 @@ import random as rnd
 import matplotlib.pyplot as plt
 
 
-def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_round=2, best_select_amount=4, mutation_coeff=0.05, iterations_max=250):
+def fit(X_raw, Y, coeffs_count=6, population_size_initial=100, random_injection_each_round=0, best_select_amount=4, mutation_rate=0.3, mutation_coeff=0.1, iterations_max=50):
+  print("Fitting with mutation_rate={} and mutation_coeff={}".format(
+      mutation_rate, mutation_coeff))
   # plt.subplot(221)
   # plt.imshow(X_comp[0], cmap=plt.get_cmap('gray'))
 
@@ -85,9 +87,11 @@ def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_roun
       prediction = processNumber(number, chromosome, X[i])
 
       if sameNumber:
-        error += min(prediction, 0) * -1
+        if prediction < 0:
+          error += prediction ** 2
       else:
-        error += max(prediction, 0)
+        if prediction > 0:
+          error += sqrt(prediction)
 
     return error
 
@@ -108,9 +112,9 @@ def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_roun
     return chro1_left_changed, chro2_right_changed
 
   def mutate(chro):
-    return list(map(lambda v: max(min(v + randomWeight() * mutation_coeff, 1), -1), chro))
+    return list(map(lambda v: v if rnd.random() > mutation_rate else max(min(v + randomWeight() * mutation_coeff, 1), -1), chro))
 
-  def fitForNumber(X, number: int, population=[randomChromosome() for i in range(population_size)], iters_left=iterations_max, error_min_previous=None):
+  def fitForNumber(X, number: int, population=[randomChromosome() for i in range(population_size_initial)], iters_left=iterations_max, error_min_previous=None):
     if iters_left == iterations_max:
       print("--- fitting number {}".format(number))
 
@@ -121,33 +125,35 @@ def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_roun
     incorrect_answers = reduce(
         lambda acc, error: acc + (1 if error > 0 else 0), errors, 0)
 
-    print("population_size: {}, error_min: {:2.4f}, delta: {:2.6f}".format(len(population),
-                                                                           error_min, 0 if error_min_previous == None else error_min_previous - error_min))
+    print("{} ticks left, population_size: {}, error_min: {:2.4f}, delta: {:2.6f}".format(iters_left, len(population),
+                                                                                          error_min, 0 if error_min_previous == None else error_min_previous - error_min))
 
     population_sorted = [population[t[0]] for t in errors_enum]
 
-    if iters_left <= 0 or error_min < 10e-4:
+    if iters_left <= 0 or error_min < 10e-5:
       return population_sorted[0]
 
     chro_best = population_sorted[:best_select_amount]
-    shuffle(chro_best)
-
-    pairs_to_crossover = zip(chro_best[::2], chro_best[1::2])
-    crossovered_pairs = list(
-        map(lambda pair: crossover(pair[0], pair[1]), pairs_to_crossover))
-    crossovered_chromosomes = [
-        chro for pair in crossovered_pairs for chro in pair]
-
     chro_best_mutated = list(map(mutate, chro_best))
+
     new_randoms = [randomChromosome()
                    for i in range(random_injection_each_round)]
 
-    population_new = crossovered_chromosomes + \
-        chro_best + chro_best_mutated + new_randoms
+    # shuffle(chro_best)
+
+    # pairs_to_crossover = zip(chro_best[::2], chro_best[1::2])
+    # crossovered_pairs = list(
+    #     map(lambda pair: crossover(pair[0], pair[1]), pairs_to_crossover))
+    # crossovered_chromosomes = [
+    #     chro for pair in crossovered_pairs for chro in pair]
+
+    # population_new = crossovered_chromosomes + \
+    #     chro_best + chro_best_mutated + new_randoms
+    population_new = chro_best + chro_best_mutated + new_randoms
 
     return fitForNumber(X, number, population_new, iters_left - 1, error_min)
 
-  def compressAllImages():
+  def compressAllImages(X_raw):
     print("Started images compressing...")
 
     X = []
@@ -164,7 +170,7 @@ def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_roun
 
     return X
 
-  X = compressAllImages()
+  X = compressAllImages(X_raw)
   chromosomes = [fitForNumber(X, i) for i in range(10)]
 
   def decider(img):
@@ -173,8 +179,9 @@ def fit(X_raw, Y, coeffs_count=8, population_size=10, random_injection_each_roun
                for number, chro in enumerate(chromosomes)]
     weights_enum = sorted(enumerate(weights), key=lambda t: t[1])
 
-    # print([round(w, 3) for w in weights])
-
     return weights_enum[-1][0]
+
+  print("Fitting done with mutation_rate={} and mutation_coeff={}".format(
+      mutation_rate, mutation_coeff))
 
   return decider
