@@ -17,8 +17,11 @@ x_train_pack = X_train[:amount]
 y_train_pack = y_train[:amount]
 
 print("Fitting on {} images...".format(len(x_train_pack)))
+m_rate = float(args.m_rate)
+m_coeff = float(args.m_coeff)
+
 decider = fit(x_train_pack, y_train_pack,
-              mutation_rate=float(args.m_rate), mutation_coeff=float(args.m_coeff))
+              mutation_rate=m_rate, mutation_coeff=m_coeff)
 
 print_step = floor(len(X_test) / 100)
 correct_hits = 0
